@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -25,27 +26,44 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun doRegister() {
-        val email = email_reg_et.text.toString()
-        val password = password_reg_et.text.toString()
-        val auth = FirebaseAuth.getInstance()
+        val email = email_reg_et.text.toString().trim()
+        val password = password_reg_et.text.toString().trim()
+        val firstName = firstname_reg_et.text.toString().trim()
+        val lastName = lastname_reg_et.text.toString().trim()
 
-        if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please enter text in email", Toast.LENGTH_SHORT).show()
+        val auth = FirebaseAuth.getInstance()
+        val db = FirebaseFirestore.getInstance()
+
+        if (firstName.isEmpty() || lastName.isEmpty() ||
+                email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "${isEmptyFields()}", Toast.LENGTH_LONG).show()
             return
         }
 
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    Log.d("Main", "createUserWithEmail:success $user")
-                    Toast.makeText(baseContext, "Registration successful", Toast.LENGTH_SHORT).show()
+                    val currentUser = auth.currentUser
+                    val user = hashMapOf(
+                        "first_name" to firstName,
+                        "last_name" to lastName,
+                        "uid" to currentUser?.uid
+                    )
+
+
                     val intent = Intent(this, LoginActivity::class.java)
+                    db.collection("users")
+                        .add(user)
+                        .addOnSuccessListener { documentReference ->
+                            Toast.makeText(baseContext, "${onRegSuccess()}", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Log.w("Main", "${onRegFail()}")
+                        }
                     startActivity(intent)
                 } else {
-                    Log.w("Main", "createUserWithEmail:failure", task.exception)
-                    Toast.makeText(baseContext, "Authentication failed.",
-                        Toast.LENGTH_SHORT).show()
+                    Toast.makeText(baseContext, "${onRegFail()}",
+                        Toast.LENGTH_LONG).show()
                 }
             }
     }

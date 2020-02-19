@@ -23,8 +23,13 @@ class LoginActivity: AppCompatActivity() {
     }
 
     private fun doLogin() {
-        val email = email_login_et.text.toString()
-        val password = password_login_et.text.toString()
+        val email = email_login_et.text.toString().trim()
+        val password = password_login_et.text.toString().trim()
+
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "${isEmptyFields()}", Toast.LENGTH_LONG).show()
+            return
+        }
 
         val auth = FirebaseAuth.getInstance()
 
@@ -33,16 +38,14 @@ class LoginActivity: AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     val user = auth.currentUser
-                    Toast.makeText(baseContext, "LoginSuccessful!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(baseContext, "${onLoginSuccess()}!", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this, HomeActivity::class.java)
                     startActivity(intent)
                 } else {
                     // If sign in fails, display a message to the user.
-                    Toast.makeText(baseContext, "Authentication failed.",
+                    Toast.makeText(baseContext, "${onLoginFail()}",
                         Toast.LENGTH_SHORT).show()
                 }
-
-                // ...
             }
     }
 }
