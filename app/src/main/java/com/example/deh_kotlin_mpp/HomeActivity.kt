@@ -20,7 +20,6 @@ class HomeActivity : AppCompatActivity() {
 
         val db = FirebaseFirestore.getInstance()
         val auth = FirebaseAuth.getInstance()
-        var currentUser = null
 
         db.collection("users")
             .whereEqualTo("uid", auth.currentUser?.uid)
@@ -28,7 +27,9 @@ class HomeActivity : AppCompatActivity() {
             .addOnSuccessListener { result ->
                 for (document in result) {
                     Log.d("Home", "${document.id} => ${document.data}")
-                    findViewById<TextView>(R.id.main_text_2).text = "Hello there, ${document.getString("first_name")} ${document.getString("last_name")}"
+                    findViewById<TextView>(R.id.main_text_2).text =
+                        "Hello there, ${document.getString("first_name")}" +
+                                "${document.getString("last_name")}"
                 }
             }
             .addOnFailureListener { exception ->
